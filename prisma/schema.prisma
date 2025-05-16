@@ -32,6 +32,7 @@ model Clue {
   id          String     @id @default(uuid())
   text        String
   answer      String
+  wordData    Json?      // Stores the classification of each word (indicator, fodder, definition)
   authorId    String
   groupId     String
   createdAt   DateTime   @default(now())
@@ -41,12 +42,13 @@ model Clue {
 }
 
 model Solution {
-  id        String   @id @default(uuid())
-  answer    String
-  correct   Boolean
-  memberId  String
-  clueId    String
-  createdAt DateTime @default(now())
-  member    Member   @relation(fields: [memberId], references: [id])
-  clue      Clue     @relation(fields: [clueId], references: [id])
+  id           String   @id @default(uuid())
+  answer       String
+  correct      Boolean
+  hintsUsed    Int      @default(0)   // Track number of hints used
+  memberId     String
+  clueId       String
+  createdAt    DateTime @default(now())
+  member       Member   @relation(fields: [memberId], references: [id])
+  clue         Clue     @relation(fields: [clueId], references: [id])
 } 

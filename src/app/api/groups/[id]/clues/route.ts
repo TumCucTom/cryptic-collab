@@ -14,30 +14,33 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Verify the group exists
-    const group = await prisma.group.findUnique({
-      where: { id: params.id },
-    });
+    const { id } = params;
 
-    if (!group) {
-      return NextResponse.json(
-        { error: 'Group not found' },
-        { status: 404 }
-      );
-    }
-
+    // Get all clues for this group with author and solution information
     const clues = await prisma.clue.findMany({
-      where: { groupId: params.id },
+      where: {
+        groupId: id,
+      },
       include: {
-        author: { select: { name: true } },
+        author: {
+          select: {
+            name: true,
+          },
+        },
         solutions: {
           select: {
             correct: true,
-            member: { select: { name: true } },
+            member: {
+              select: {
+                name: true,
+              },
+            },
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
 
     return NextResponse.json(clues);
@@ -55,62 +58,36 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Verify the group exists
-    const group = await prisma.group.findUnique({
-      where: { id: params.id },
-    });
-
-    if (!group) {
-      return NextResponse.json(
-        { error: 'Group not found' },
-        { status: 404 }
-      );
-    }
-
+    const { id } = params;
     const { text, answer } = await request.json();
     const cookieHeader = request.headers.get('cookie');
     const memberId = getCookieValue(cookieHeader, 'memberId');
 
-    if (!text || !answer || !memberId) {
+    if (!text || !answer) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Clue text and answer are required' },
         { status: 400 }
       );
     }
 
-    // Verify the member exists and belongs to this group
-    const member = await prisma.member.findFirst({
-      where: { 
-        id: memberId,
-        groupId: params.id
-      },
-    });
-
-    if (!member) {
+    if (!memberId) {
       return NextResponse.json(
-        { error: 'Member not found or not in this group' },
-        { status: 404 }
+        { error: 'You must be a member to submit clues' },
+        { status: 401 }
       );
     }
 
+    // Create the clue
     const clue = await prisma.clue.create({
       data: {
         text,
-        answer: answer.toUpperCase(),
+        answer: answer.toUpperCase().trim(),
+        groupId: id,
         authorId: memberId,
-        groupId: params.id,
-      },
-      include: {
-        author: { select: { name: true } },
-        solutions: {
-          select: {
-            correct: true,
-            member: { select: { name: true } },
-          },
-        },
       },
     });
 
+    // Return the created clue
     return NextResponse.json(clue);
   } catch (error) {
     console.error('Failed to create clue:', error);

@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { NextResponse } from 'next/server';
+import { calculateScore } from '@/lib/utils';
 
 const prisma = new PrismaClient();
 
@@ -23,7 +24,7 @@ export async function POST(
       );
     }
 
-    const { answer } = await request.json();
+    const { answer, hintsUsed = 0 } = await request.json();
     const cookieHeader = request.headers.get('cookie');
     const memberId = getCookieValue(cookieHeader, 'memberId');
 
@@ -45,40 +46,69 @@ export async function POST(
       );
     }
 
-    // Check if member has already solved this clue
+    // Check if member has already solved this clue correctly
     const existingSolution = await prisma.solution.findFirst({
       where: {
         clueId,
         memberId,
+        correct: true
       },
     });
 
     if (existingSolution) {
       return NextResponse.json(
-        { error: 'You have already attempted this clue' },
+        { error: 'You have already solved this clue' },
         { status: 400 }
       );
     }
 
-    const isCorrect = answer.toUpperCase() === clue.answer;
+    const isCorrect = answer.toUpperCase() === clue.answer.toUpperCase();
 
-    // Create the solution
-    const solution = await prisma.solution.create({
-      data: {
-        answer: answer.toUpperCase(),
-        correct: isCorrect,
-        memberId,
+    // Create or update the solution
+    let solution;
+    
+    const existingAttempt = await prisma.solution.findFirst({
+      where: {
         clueId,
+        memberId,
       },
     });
+    
+    if (existingAttempt) {
+      // Update existing attempt if it exists
+      solution = await prisma.solution.update({
+        where: {
+          id: existingAttempt.id
+        },
+        data: {
+          answer: answer.toUpperCase(),
+          correct: isCorrect,
+          hintsUsed: hintsUsed,
+        },
+      });
+    } else {
+      // Create new solution if no attempts yet
+      solution = await prisma.solution.create({
+        data: {
+          answer: answer.toUpperCase(),
+          correct: isCorrect,
+          hintsUsed: hintsUsed,
+          memberId,
+          clueId,
+        },
+      });
+    }
 
     // If correct, update the member's score
     if (isCorrect) {
+      // Calculate score based on hints used (which now includes incorrect guesses)
+      const points = calculateScore(true, hintsUsed);
+      
       await prisma.member.update({
         where: { id: memberId },
         data: {
           score: {
-            increment: 1,
+            increment: points,
           },
         },
       });
@@ -87,6 +117,7 @@ export async function POST(
     return NextResponse.json({
       correct: isCorrect,
       solution,
+      pointsEarned: isCorrect ? calculateScore(true, hintsUsed) : 0
     });
   } catch (error) {
     console.error('Failed to submit solution:', error);
