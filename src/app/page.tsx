@@ -20,7 +20,7 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: joinCode, memberName: joinName }),
       });
-      
+
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || 'Failed to join group');
@@ -40,7 +40,7 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ groupName, memberName: createName }),
       });
-      
+
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || 'Failed to create group');
@@ -53,108 +53,93 @@ export default function Home() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-2">Share & Solve Cryptic Clues Together</h1>
-      <p className="text-gray-600 mb-6">Create groups with friends, share cryptic clues, and track progress together</p>
-      
-      {error && (
-        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
-          <p>{error}</p>
-        </div>
-      )}
+    <main className="min-h-screen bg-white text-black px-4 py-12 font-mono">
+      <div className="max-w-xl mx-auto">
+        <h1 className="text-4xl font-bold mb-4 leading-tight">Share & Solve Cryptic Clues Together</h1>
+        <p className="text-gray-500 mb-8">Create or join a group of friends to swap cryptic crossword clues and compete.</p>
 
-      <div className="mb-8">
-        <div className="mb-4">
-          <button 
-            className={`mr-4 font-medium ${!showCreateForm ? 'underline text-purple-700' : ''}`}
+        {error && (
+          <div className="bg-red-50 text-red-700 px-4 py-2 rounded mb-6 border border-red-200">
+            {error}
+          </div>
+        )}
+
+        <div className="flex space-x-6 mb-6 text-sm font-semibold">
+          <button
+            className={`${!showCreateForm ? 'text-black underline' : 'text-gray-400'} transition`}
             onClick={() => setShowCreateForm(false)}
           >
-            Join a Group
+            Join Group
           </button>
-          <button 
-            className={`font-medium ${showCreateForm ? 'underline text-purple-700' : ''}`}
+          <button
+            className={`${showCreateForm ? 'text-black underline' : 'text-gray-400'} transition`}
             onClick={() => setShowCreateForm(true)}
           >
-            Create a Group
+            Create Group
           </button>
         </div>
-        
+
         {!showCreateForm ? (
           <form onSubmit={handleJoinGroup} className="space-y-4">
-            <div>
-              <label className="block mb-1">Your Name</label>
-              <input
-                type="text"
-                value={joinName}
-                onChange={(e) => setJoinName(e.target.value)}
-                className="border p-2 w-full max-w-xs rounded"
-                placeholder="Enter your name"
-                required
-              />
-            </div>
-            <div>
-              <label className="block mb-1">Group Code</label>
-              <input
-                type="text"
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value)}
-                className="border p-2 w-full max-w-xs rounded"
-                placeholder="Enter group code"
-                required
-              />
-            </div>
-            <button type="submit" className="bg-purple-700 text-white px-4 py-2 rounded hover:bg-purple-800">
-              Join Group
+            <input
+              type="text"
+              value={joinName}
+              onChange={(e) => setJoinName(e.target.value)}
+              placeholder="Your name"
+              className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:ring-1 focus:ring-black"
+              required
+            />
+            <input
+              type="text"
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value)}
+              placeholder="Group code"
+              className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:ring-1 focus:ring-black"
+              required
+            />
+            <button
+              type="submit"
+              className="w-full bg-black text-white py-2 rounded hover:opacity-90 transition"
+            >
+              Join
             </button>
           </form>
         ) : (
           <form onSubmit={handleCreateGroup} className="space-y-4">
-            <div>
-              <label className="block mb-1">Your Name</label>
-              <input
-                type="text"
-                value={createName}
-                onChange={(e) => setCreateName(e.target.value)}
-                className="border p-2 w-full max-w-xs rounded"
-                placeholder="Enter your name"
-                required
-              />
-            </div>
-            <div>
-              <label className="block mb-1">Group Name</label>
-              <input
-                type="text"
-                value={groupName}
-                onChange={(e) => setGroupName(e.target.value)}
-                className="border p-2 w-full max-w-xs rounded"
-                placeholder="Enter group name"
-                required
-              />
-            </div>
-            <button type="submit" className="bg-purple-700 text-white px-4 py-2 rounded hover:bg-purple-800">
-              Create Group
+            <input
+              type="text"
+              value={createName}
+              onChange={(e) => setCreateName(e.target.value)}
+              placeholder="Your name"
+              className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:ring-1 focus:ring-black"
+              required
+            />
+            <input
+              type="text"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              placeholder="Group name"
+              className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:ring-1 focus:ring-black"
+              required
+            />
+            <button
+              type="submit"
+              className="w-full bg-black text-white py-2 rounded hover:opacity-90 transition"
+            >
+              Create
             </button>
           </form>
         )}
-      </div>
 
-      <div className="mt-12">
-        <h2 className="text-2xl font-bold mb-4">How It Works</h2>
-        <div className="space-y-4">
-          <div>
-            <h3 className="font-bold">1. Create or Join a Group</h3>
-            <p className="text-gray-600">Start by creating a new group or joining an existing one with a code</p>
-          </div>
-          <div>
-            <h3 className="font-bold">2. Share Cryptic Clues</h3>
-            <p className="text-gray-600">Post your favorite cryptic crossword clues with their answers</p>
-          </div>
-          <div>
-            <h3 className="font-bold">3. Solve & Compete</h3>
-            <p className="text-gray-600">Solve clues from others and climb up the leaderboard</p>
-          </div>
-        </div>
+        <section className="mt-12">
+          <h2 className="text-xl font-bold mb-4">How It Works</h2>
+          <ul className="space-y-2 text-sm text-gray-600">
+            <li><strong>1. </strong>Create or join a group with a short code</li>
+            <li><strong>2. </strong>Share cryptic clues and solutions</li>
+            <li><strong>3. </strong>Track solves and see who’s on top</li>
+          </ul>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
