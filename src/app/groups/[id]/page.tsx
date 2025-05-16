@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 
 interface Group {
@@ -38,11 +38,7 @@ export default function GroupPage() {
   const [currentClue, setCurrentClue] = useState<Clue | null>(null);
   const [showClueAnswer, setShowClueAnswer] = useState(false);
 
-  useEffect(() => {
-    fetchGroupData();
-  }, [groupId]);
-
-  const fetchGroupData = async () => {
+  const fetchGroupData = useCallback(async () => {
     try {
       const [groupRes, cluesRes, membersRes] = await Promise.all([
         fetch(`/api/groups/${groupId}`),
@@ -65,10 +61,14 @@ export default function GroupPage() {
         const firstUnsolved = cluesData.find((clue: Clue) => !clue.solutions.some((s: {correct: boolean}) => s.correct));
         if (firstUnsolved) setCurrentClue(firstUnsolved);
       }
-    } catch (err) {
+    } catch (error) {
       setError('Failed to load group data');
     }
-  };
+  }, [groupId, currentClue]);
+
+  useEffect(() => {
+    fetchGroupData();
+  }, [fetchGroupData]);
 
   const handleSubmitClue = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,8 +88,9 @@ export default function GroupPage() {
       setNewAnswer('');
       fetchGroupData();
       setActiveTab('clues');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit clue');
+    } catch (error) {
+      console.error('Submit clue error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to submit clue');
     }
   };
 
@@ -109,8 +110,9 @@ export default function GroupPage() {
       setSolutions(prev => ({ ...prev, [clueId]: '' }));
       setShowClueAnswer(true);
       fetchGroupData();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit solution');
+    } catch (error) {
+      console.error('Submit solution error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to submit solution');
     }
   };
 

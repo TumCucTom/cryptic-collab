@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { NextResponse } from 'next/server';
 import { generateCode } from '@/lib/utils';
 
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     const code = generateCode();
 
     // Create the group and member in a transaction
-    const result = await prisma.$transaction(async (tx: { group: { create: (arg0: { data: { name: any; code: string; }; }) => any; }; member: { create: (arg0: { data: { name: any; groupId: any; }; }) => any; }; }) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const group = await tx.group.create({
         data: {
           name: groupName,
